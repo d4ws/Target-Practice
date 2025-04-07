@@ -7,8 +7,8 @@ Servo servo9;
 Servo servo10;
 
 
-const int ldrThreshold = 600; // Lazer vurulma eşiği.
-const unsigned long maxGameTime = 20000; // Oyun süresi 100 saniye.
+const int ldrThreshold = 600; // Lazer vurulma eşiği. Oyunu başlatmadan önce mutlaka doğru değeri kontrol et.
+const unsigned long maxGameTime = 20000; // Oyun süresi.
 
 // Motorların en son kaçıncı saniyede açıldıklarını kayıt eden değişkenler.
 // Bunu kullanarak hedefin zaman aşımına uğrayıp kapanmasını sağlıyoruz.
@@ -24,13 +24,14 @@ int multiplier = 1;
 bool gameOver = false;
 
 // stateler : 0 -> 0 derece. 1 -> 90 derece. 2 -> 180 derece.
-// servo3 : 0 derecede kapalı. servo5 : 90 derecede kapalı. ...
+// servo3 : 0 derecede kapalı. servo5 ,6 ve 9 : 90 derecede kapalı. servo10 : 180 derecede kapalı.
 int servostate3 = 0; 
 int servostate5 = 1; 
 int servostate6 = 1; 
 int servostate9 = 1; 
 int servostate10 = 2; 
 
+// Her bir hedefin kaç kez açıldığını kaydeden değişkenler.
 int opencount3 = 0;
 int opencount5 = 0;
 int opencount6 = 0;
@@ -68,7 +69,8 @@ void loop() {
     int ldrvalue10 = analogRead(A4);
 
 
-    if (gameOver) return; // Oyun bittiyse kodu çalıştırma
+    // Oyun bittiyse kodu çalıştırma
+    if (gameOver) return; 
 
     // ASIL OYUN (hangi hedefin kaçıncı saniyede hangi konuma geleceği ve kaç saniye o konumda kalacağı, vurulup vurulmadığı, her şey burada kontrol ediliyor.)
     switch(opencount3) {
@@ -98,6 +100,7 @@ void loop() {
 }
 
 // Kapalı hedefleri açmak için Trigger metodunu kullanıyoruz. Her motorun Trigger metodu kendine özel.
+// Bu metot 2 değişken alıyor. İlk değişken hedefin kaçıncı saniyede açılacağı, ikinci değer ise hangi duruma geleceği (hangi açıya geleceği).
 void Trigger3(float triggertime , int wishedstate){
 // Servo kapalıysa ve istenilen zaman gelmişse buraya gir
   if(servostate3 == 0 && millis() == triggertime){
@@ -199,8 +202,8 @@ void Trigger10(float triggertime ,int wishedstate){
   }
 }
 
-// Açık olan hedeflerin kapanması için CheckHit metotlarını kullanıyoruz.
-// Her motorun metodu kendine özel.
+// Açık olan hedeflerin kapanması için CheckHit metotlarını kullanıyoruz. Her motorun metodu kendine özel.
+// Bu metot 2 değişken alıyor. İlki LDR'ye düşen değer, ikinicisi ise hedefin kaç saniye açık kaldıktan sonra kapanacağı.
 void CheckHit3(int ldr, float duration){
   // Hedef zaten kapalıysa bir şey yapma.
   if(servostate3 == 0) return;
