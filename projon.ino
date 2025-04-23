@@ -6,9 +6,9 @@ Servo servo6;
 Servo servo9;
 Servo servo10;
 
-
-const int ldrThreshold = 600; // Lazer vurulma eşiği. Oyunu başlatmadan önce mutlaka doğru değeri kontrol et.
-const unsigned long maxGameTime = 20000; // Oyun süresi.
+// Music :: Death by Glamour - Toby Fox
+const int ldrThreshold = 600; // Lazer vurulma eşiği.
+const unsigned long maxGameTime = 135000; // Oyun süresi (milisaniye)
 
 // Motorların en son kaçıncı saniyede açıldıklarını kayıt eden değişkenler.
 // Bunu kullanarak hedefin zaman aşımına uğrayıp kapanmasını sağlıyoruz.
@@ -18,8 +18,8 @@ unsigned long lastopentime6;
 unsigned long lastopentime9;
 unsigned long lastopentime10;
 
-
-int skor = 0;
+// Skor ve skor katlayıcısı.
+unsigned long skor = 0;
 int multiplier = 1;
 bool gameOver = false;
 
@@ -62,32 +62,145 @@ void setup() {
 
 void loop() {
   // LDR değerlerini ata.
-    int ldrvalue3 = analogRead(A0);
-    int ldrvalue5 = analogRead(A1);
-    int ldrvalue6 = analogRead(A2);
-    int ldrvalue9 = analogRead(A3);
+    int ldrvalue3 =  analogRead(A0);
+    int ldrvalue5 =  analogRead(A1);
+    int ldrvalue6 =  analogRead(A2);
+    int ldrvalue9 =  analogRead(A3);
     int ldrvalue10 = analogRead(A4);
 
+    if (gameOver) return; // Oyun bittiyse kodu çalıştırma
 
-    // Oyun bittiyse kodu çalıştırma
-    if (gameOver) return; 
 
     // ASIL OYUN (hangi hedefin kaçıncı saniyede hangi konuma geleceği ve kaç saniye o konumda kalacağı, vurulup vurulmadığı, her şey burada kontrol ediliyor.)
+    // Burası sadece hedefleri zamanı gelince açmak için.
+    // Açılma sayısı tablosu :                          3 -- 5 -- 6 -- 9 -- 10
+    switch(millis()) {
+      case 6600:  Trigger10(0); break;              //  0 -- 0 -- 0 -- 0 -- 1
+      case 9800:  Trigger3(2);  break;              //  1 -- 0 -- 0 -- 0 -- 1
+      case 13000: Trigger9(0);  break;              //  1 -- 0 -- 0 -- 1 -- 1
+      case 16250: Trigger5(2);  break;              //  1 -- 1 -- 0 -- 1 -- 1
+      case 22800: Trigger6(0);  break;              //  1 -- 1 -- 1 -- 1 -- 1
+      case 26240: Trigger10(1); Trigger9(0); break; //  1 -- 1 -- 1 -- 2 -- 2
+      case 29350: Trigger5(2); Trigger3(1);  break; //  2 -- 2 -- 1 -- 2 -- 2
+      case 32500: Trigger10(0); Trigger3(2); break; //  3 -- 2 -- 1 -- 2 -- 3
+      case 35750: Trigger9(2); Trigger5(0);  break; //  3 -- 3 -- 1 -- 3 -- 3
+      case 42300: Trigger6(2); break;               //  3 -- 3 -- 2 -- 3 -- 3
+      case 45500: Trigger10(1); break;              //  3 -- 3 -- 2 -- 3 -- 4
+      case 48800: Trigger9(2); break;               //  3 -- 3 -- 2 -- 4 -- 4
+      case 52000: Trigger3(2); break;               //  4 -- 3 -- 2 -- 4 -- 4
+      case 55200: Trigger5(0); break;               //  4 -- 4 -- 2 -- 4 -- 4
+      case 61700: Trigger9(0); break;               //  4 -- 4 -- 2 -- 5 -- 4
+      case 62500: Trigger3(2); break;               //  5 -- 4 -- 2 -- 5 -- 4
+      case 63350: Trigger5(2); break;               //  5 -- 5 -- 2 -- 5 -- 4
+      case 64150: Trigger10(0); break;              //  5 -- 5 -- 2 -- 5 -- 5
+
+      case 68200: Trigger5(0); break;               //  5 -- 6 -- 2 -- 5 -- 5
+      case 69000: Trigger3(1); break;               //  6 -- 6 -- 2 -- 5 -- 5
+      case 69800: Trigger9(0); Trigger6(0); break;  //  6 -- 6 -- 3 -- 6 -- 5
+      case 74700: Trigger5(2); break;               //  6 -- 7 -- 3 -- 6 -- 5 
+      case 75500: Trigger9(2); break;               //  6 -- 7 -- 3 -- 7 -- 5 
+      case 76300: Trigger3(2); Trigger10(0); break; //  7 -- 7 -- 3 -- 7 -- 6
+      case 81200: Trigger10(1); break;              //  7 -- 7 -- 3 -- 7 -- 7
+      case 82000: Trigger3(1); break;               //  8 -- 7 -- 3 -- 7 -- 7
+      case 82800: Trigger6(2); Trigger5(2); break;  //  8 -- 8 -- 4 -- 7 -- 7
+      case 87700: Trigger5(0); break;               //  8 -- 9 -- 4 -- 7 -- 7
+      case 88500: Trigger9(0); break;               //  8 -- 9 -- 4 -- 8 -- 7
+      case 89300: Trigger6(0); Trigger10(1); break; //  8 -- 9 -- 5 -- 8 -- 8
+
+      case 94200: Trigger9(0); break;               //  8 -- 9 -- 5 -- 9 -- 8
+      case 95800: Trigger3(2); break;               //  9 -- 9 -- 5 -- 9 -- 8
+      case 97550: Trigger10(1); break;              //  9 -- 9 -- 5 -- 9 -- 9
+      case 99000: Trigger3(2); break;               //  10 -- 9 -- 5 -- 9 -- 9
+      case 100700: Trigger6(2); break;              //  10 -- 9 -- 6 -- 9 -- 9
+      case 102300: Trigger5(0); break;              //  10 -- 10 -- 6 -- 9 -- 9
+      case 103900: Trigger9(2); break;              //  10 -- 10 -- 6 -- 10 -- 9
+      case 105500: Trigger10(0); break;             //  10 -- 10 -- 6 -- 10 -- 10
+      case 107200: Trigger9(1); break;              //  10 -- 10 -- 6 -- 11 -- 10
+      case 108800: Trigger6(0); break;              //  10 -- 10 -- 7 -- 11 -- 10
+      case 110600: Trigger9(2); break;              //  10 -- 10 -- 7 -- 12 -- 10
+      case 112000: Trigger3(2); break;              //  11 -- 10 -- 7 -- 12 -- 10
+      case 113700: Trigger9(2); break;              //  11 -- 10 -- 7 -- 13 -- 10
+      case 114000: Trigger5(0); break;              //  11 -- 11 -- 7 -- 13 -- 10
+      case 114300: Trigger10(0); break;             //  11 -- 11 -- 7 -- 13 -- 11
+      case 114500: Trigger3(2); break;              //  12 -- 11 -- 7 -- 13 -- 11
+      
+
+
+
+    }  
+
+
+    // Burası hedeflerin kapanmasını sağlamak için.
     switch(opencount3) {
-      case 0: Trigger3(5000, 2); break;
-      case 1: CheckHit3(ldrvalue3, 2500); Trigger3(10000, 1); break;
-      case 2: CheckHit3(ldrvalue3, 1500); Trigger3(14000, 2); break;
-      case 3: CheckHit3(ldrvalue3, 3500); break;
+      case 1:  CheckHit3(ldrvalue3, 2500); break;
+      case 2:  CheckHit3(ldrvalue3, 32500 - 29350 - 500); break;
+      case 3:  CheckHit3(ldrvalue3, 35750 - 32500); break;
+      case 4:  CheckHit3(ldrvalue3, 3000); break;
+      case 5:  CheckHit3(ldrvalue3, 3850); break;
+      case 6:  CheckHit3(ldrvalue3, 3000); break;
+      case 7:  CheckHit3(ldrvalue3, 3000); break;
+      case 8:  CheckHit3(ldrvalue3, 3000); break;
+      case 9:  CheckHit3(ldrvalue3, 1600); break;
+      case 10: CheckHit3(ldrvalue3, 1600); break;
+      case 11: CheckHit3(ldrvalue3, 1600); break;
+      case 12: CheckHit3(ldrvalue3, 1600); break;
     }
 
     switch(opencount5) {
-      case 0: Trigger5(5500, 2); break;
-      case 1: CheckHit5(ldrvalue5, 2500); Trigger5(10500, 0); break;
-      case 2: CheckHit5(ldrvalue5, 1500); Trigger5(14500, 2); break;
-      case 3: CheckHit5(ldrvalue5, 3500); break;
+      case 1:  CheckHit5(ldrvalue5, 2500); break;
+      case 2:  CheckHit5(ldrvalue5, 32500 - 29350 - 500); break;
+      case 3:  CheckHit5(ldrvalue5, 40000 - 35750); break;
+      case 4:  CheckHit5(ldrvalue5, 3000); break;
+      case 5:  CheckHit5(ldrvalue5, 3000); break;
+      case 6:  CheckHit5(ldrvalue5, 3000); break;
+      case 7:  CheckHit5(ldrvalue5, 3000); break;
+      case 8:  CheckHit5(ldrvalue5, 3000); break;
+      case 9:  CheckHit5(ldrvalue5, 3000); break;
+      case 10: CheckHit5(ldrvalue5, 1600); break;
+      case 11: CheckHit5(ldrvalue5, 1600); break;
     }
 
-    // will be continued...
+    switch(opencount6) {
+      case 1: CheckHit6(ldrvalue6, 2500); break;
+      case 2: CheckHit6(ldrvalue6, 2000); break;
+      case 3: CheckHit6(ldrvalue6, 3000); break;
+      case 4: CheckHit6(ldrvalue6, 3000); break;
+      case 5: CheckHit6(ldrvalue6, 3000); break;
+      case 6: CheckHit6(ldrvalue6, 1500); break;
+      case 7: CheckHit6(ldrvalue6, 1700); break;
+    }
+
+    switch(opencount9) {
+      case 1:  CheckHit9(ldrvalue9, 2500); break;
+      case 2:  CheckHit9(ldrvalue9, 29350 - 26240); break;
+      case 3:  CheckHit9(ldrvalue9, 40000 - 35750); break;
+      case 4:  CheckHit9(ldrvalue9, 3000); break;
+      case 5:  CheckHit9(ldrvalue9, 4650); break;
+      case 6:  CheckHit9(ldrvalue9, 3000); break;
+      case 7:  CheckHit9(ldrvalue9, 3000); break;
+      case 8:  CheckHit9(ldrvalue9, 3000); break;
+      case 9:  CheckHit9(ldrvalue9, 1600); break;
+      case 10: CheckHit9(ldrvalue9, 1600); break;
+      case 11: CheckHit9(ldrvalue9, 1600); break;
+      case 12: CheckHit9(ldrvalue9, 1600); break;
+      case 13: CheckHit9(ldrvalue9, 1600); break;
+    }
+
+    switch(opencount10) {
+      case 1:  CheckHit10(ldrvalue10, 2500); break;
+      case 2:  CheckHit10(ldrvalue10, 29350 - 26240); break;
+      case 3:  CheckHit10(ldrvalue10, 35750 - 32500); break;
+      case 4:  CheckHit10(ldrvalue10, 2500); break;
+      case 5:  CheckHit10(ldrvalue10, 2200); break;
+      case 6:  CheckHit10(ldrvalue10, 3000); break;
+      case 7:  CheckHit10(ldrvalue10, 3000); break;
+      case 8:  CheckHit10(ldrvalue10, 3000); break;
+      case 9:  CheckHit10(ldrvalue10, 1600); break;
+      case 10: CheckHit10(ldrvalue10, 1600); break;
+      case 11: CheckHit10(ldrvalue10, 1600); break;
+    }
+
+
   
     
     // Oyun süresi dolarsa oyunu bitir.
@@ -101,9 +214,9 @@ void loop() {
 
 // Kapalı hedefleri açmak için Trigger metodunu kullanıyoruz. Her motorun Trigger metodu kendine özel.
 // Bu metot 2 değişken alıyor. İlk değişken hedefin kaçıncı saniyede açılacağı, ikinci değer ise hangi duruma geleceği (hangi açıya geleceği).
-void Trigger3(float triggertime , int wishedstate){
-// Servo kapalıysa ve istenilen zaman gelmişse buraya gir
-  if(servostate3 == 0 && millis() == triggertime){
+void Trigger3(int wishedstate){
+// Servo kapalıysa buraya gir
+  if(servostate3 == 0){
     // 90 dereceye getirmek istiyorsan
     if(wishedstate == 1){
         servo3.write(90);
@@ -124,8 +237,8 @@ void Trigger3(float triggertime , int wishedstate){
   }
 }
 
-void Trigger5(float triggertime ,int wishedstate){
-  if(servostate5 == 1 && millis() == triggertime){
+void Trigger5(int wishedstate){
+  if(servostate5 == 1){
     // 0 dereceye getirmek istiyorsan
     if(wishedstate == 0){
         servo5.write(0);
@@ -145,8 +258,8 @@ void Trigger5(float triggertime ,int wishedstate){
   }
 }
 
-void Trigger6(float triggertime ,int wishedstate){
-  if(servostate6 == 1 && millis() == triggertime){
+void Trigger6(int wishedstate){
+  if(servostate6 == 1){
     if(wishedstate == 0){
         servo6.write(0);
         Serial.print(millis() / 1000.0);
@@ -164,8 +277,8 @@ void Trigger6(float triggertime ,int wishedstate){
   }
 }
 
-void Trigger9(float triggertime ,int wishedstate){
-  if(servostate9 == 1 && millis() == triggertime){
+void Trigger9(int wishedstate){
+  if(servostate9 == 1){
     if(wishedstate == 0){
         servo9.write(0);
         Serial.print(millis() / 1000.0);
@@ -183,8 +296,8 @@ void Trigger9(float triggertime ,int wishedstate){
   }
 }
 
-void Trigger10(float triggertime ,int wishedstate){
-  if(servostate10 == 2 && millis() == triggertime){
+void Trigger10(int wishedstate){
+  if(servostate10 == 2){
     if(wishedstate == 1){
         servo10.write(90);
         Serial.print(millis() / 1000.0);
@@ -203,7 +316,7 @@ void Trigger10(float triggertime ,int wishedstate){
 }
 
 // Açık olan hedeflerin kapanması için CheckHit metotlarını kullanıyoruz. Her motorun metodu kendine özel.
-// Bu metot 2 değişken alıyor. İlki LDR'ye düşen değer, ikinicisi ise hedefin kaç saniye açık kaldıktan sonra kapanacağı.
+// Bu metot 2 değişken alıyor. İlki LDR'ye düşen değer, ikinicisi ise hedefin kaç milisaniye açık kaldıktan sonra kapanacağı.
 void CheckHit3(int ldr, float duration){
   // Hedef zaten kapalıysa bir şey yapma.
   if(servostate3 == 0) return;
