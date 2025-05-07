@@ -49,15 +49,13 @@ void setup() {
     Serial.begin(9600);
     clearSerialMonitor();
 
-    // if (!myDFPlayer.begin(mySerial)) {
-    // Serial.println("DFPlayer bağlantı hatası!");
-    // while (true);
-    // }
-    // myDFPlayer.volume(18);  // Ses seviyesi (0-30)
+     if (!myDFPlayer.begin(mySerial)) {
+     Serial.println("DFPlayer bağlantı hatası!");
+     while (true);
+     }
+     myDFPlayer.volume(18);  // Ses seviyesi (0-30)
     // Music :: Death by Glamour - Toby Fox
-    // myDFPlayer.play(1);  // SD karttaki 1. MP3 dosyasını çalar 
-  
-  
+    myDFPlayer.play(1);  // SD karttaki 1. MP3 dosyasını çalar 
     
     // Motorları attachla
     servo3.attach(3);
@@ -85,8 +83,7 @@ void loop() {
     int ldrvalue10 = analogRead(A4);
 
     if (gameOver) return; // Oyun bittiyse kodu çalıştırma
-
-
+    
     // ASIL OYUN (hangi hedefin kaçıncı saniyede hangi konuma geleceği ve kaç saniye o konumda kalacağı, vurulup vurulmadığı, her şey burada kontrol ediliyor.)
 
     // Burası sadece hedefleri zamanı gelince açmak için.
@@ -406,10 +403,10 @@ void CheckHit6(int ldr, float duration){
   if (ldr >= ldrThreshold) {
       servo6.write(90);
       servostate6 = 1; 
-      skor -= 2000; // Servo6 sivil.
+      skor -= 20000; // Servo6 sivil.
       multiplier = 1;
       Serial.print(millis() / 1000.0);
-      Serial.println("-> Sivil vuruldu! -2000 puan. (Skor : " + String(skor) +")");
+      Serial.println("-> Sivil vuruldu! -20000 puan. (Skor : " + String(skor) +")");
   }
   else if (millis() >= lastopentime6 + duration) {
       servo6.write(90);
