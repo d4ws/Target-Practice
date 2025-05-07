@@ -1,4 +1,9 @@
 #include <Servo.h>
+#include <DFRobotDFPlayerMini.h>
+#include <SoftwareSerial.h>
+
+SoftwareSerial mySerial(11,2); // RX -> 2 , TX -> 11
+DFRobotDFPlayerMini myDFPlayer;
 
 Servo servo3;
 Servo servo5;
@@ -6,7 +11,6 @@ Servo servo6;
 Servo servo9;
 Servo servo10;
 
-// Music :: Death by Glamour - Toby Fox
 const int ldrThreshold = 600; // Lazer vurulma eşiği.
 const unsigned long maxGameTime = 135000; // Oyun süresi (milisaniye)
 
@@ -21,6 +25,7 @@ unsigned long lastopentime10;
 // Skor ve skor katlayıcısı.
 unsigned long skor = 0;
 int multiplier = 1;
+int maxmultiplier = 16;
 bool gameOver = false;
 
 // stateler : 0 -> 0 derece. 1 -> 90 derece. 2 -> 180 derece.
@@ -40,9 +45,20 @@ int opencount10 = 0;
 
 
 void setup() {
+    mySerial.begin(9600);
     Serial.begin(9600);
     clearSerialMonitor();
 
+    // if (!myDFPlayer.begin(mySerial)) {
+    // Serial.println("DFPlayer bağlantı hatası!");
+    // while (true);
+    // }
+    // myDFPlayer.volume(18);  // Ses seviyesi (0-30)
+    // Music :: Death by Glamour - Toby Fox
+    // myDFPlayer.play(1);  // SD karttaki 1. MP3 dosyasını çalar 
+  
+  
+    
     // Motorları attachla
     servo3.attach(3);
     servo5.attach(5);
@@ -72,9 +88,10 @@ void loop() {
 
 
     // ASIL OYUN (hangi hedefin kaçıncı saniyede hangi konuma geleceği ve kaç saniye o konumda kalacağı, vurulup vurulmadığı, her şey burada kontrol ediliyor.)
+
     // Burası sadece hedefleri zamanı gelince açmak için.
     // Açılma sayısı tablosu :                          3 -- 5 -- 6 -- 9 -- 10
-    switch(millis()) {
+    switch(millis() - 2000) {
       case 6600:  Trigger10(0); break;              //  0 -- 0 -- 0 -- 0 -- 1
       case 9800:  Trigger3(2);  break;              //  1 -- 0 -- 0 -- 0 -- 1
       case 13000: Trigger9(0);  break;              //  1 -- 0 -- 0 -- 1 -- 1
@@ -110,31 +127,39 @@ void loop() {
       case 94200: Trigger9(0); break;               //  8 -- 9 -- 5 -- 9 -- 8
       case 95800: Trigger3(2); break;               //  9 -- 9 -- 5 -- 9 -- 8
       case 97550: Trigger10(1); break;              //  9 -- 9 -- 5 -- 9 -- 9
-      case 99000: Trigger3(2); break;               //  10 -- 9 -- 5 -- 9 -- 9
+      case 99000: Trigger3(1); break;               //  10 -- 9 -- 5 -- 9 -- 9
       case 100700: Trigger6(2); break;              //  10 -- 9 -- 6 -- 9 -- 9
       case 102300: Trigger5(0); break;              //  10 -- 10 -- 6 -- 9 -- 9
       case 103900: Trigger9(2); break;              //  10 -- 10 -- 6 -- 10 -- 9
       case 105500: Trigger10(0); break;             //  10 -- 10 -- 6 -- 10 -- 10
-      case 107200: Trigger9(1); break;              //  10 -- 10 -- 6 -- 11 -- 10
+      case 107200: Trigger9(0); break;              //  10 -- 10 -- 6 -- 11 -- 10
       case 108800: Trigger6(0); break;              //  10 -- 10 -- 7 -- 11 -- 10
       case 110600: Trigger9(2); break;              //  10 -- 10 -- 7 -- 12 -- 10
       case 112000: Trigger3(2); break;              //  11 -- 10 -- 7 -- 12 -- 10
       case 113700: Trigger9(2); break;              //  11 -- 10 -- 7 -- 13 -- 10
       case 114000: Trigger5(0); break;              //  11 -- 11 -- 7 -- 13 -- 10
       case 114300: Trigger10(0); break;             //  11 -- 11 -- 7 -- 13 -- 11
-      case 114500: Trigger3(2); break;              //  12 -- 11 -- 7 -- 13 -- 11
-      
+      case 114500: Trigger3(1); break;              //  12 -- 11 -- 7 -- 13 -- 11
 
-
-
+      case 120100: Trigger3(1); Trigger5(2); break; //  13 -- 12 -- 7 -- 13 -- 11
+      case 120500: Trigger10(1); Trigger9(0); break;//  13 -- 12 -- 7 -- 14 -- 12
+      case 120900: Trigger6(0); break;              //  13 -- 12 -- 8 -- 14 -- 12
+      case 123300: Trigger3(2); Trigger10(0); break;//  14 -- 12 -- 8 -- 14 -- 13
+      case 123700: Trigger6(2); Trigger9(2); break; //  14 -- 12 -- 9 -- 15 -- 13
+      case 124100: Trigger5(0); break;              //  14 -- 13 -- 9 -- 15 -- 13
+      case 126650: Trigger5(2); Trigger9(0); break; //  14 -- 14 -- 9 -- 16 -- 13
+      case 127050: Trigger3(1); Trigger10(1); break;//  15 -- 14 -- 9 -- 16 -- 14
+      case 127400: Trigger6(0); break;              //  15 -- 14 -- 10 -- 16 -- 14
     }  
 
+    // Skor katlayıcının belli bir sayının üstüne çıkmasını istemiyoruz.
+    if (multiplier  >= maxmultiplier) { multiplier = maxmultiplier;}
 
     // Burası hedeflerin kapanmasını sağlamak için.
     switch(opencount3) {
       case 1:  CheckHit3(ldrvalue3, 2500); break;
-      case 2:  CheckHit3(ldrvalue3, 32500 - 29350 - 500); break;
-      case 3:  CheckHit3(ldrvalue3, 35750 - 32500); break;
+      case 2:  CheckHit3(ldrvalue3, 2650); break;
+      case 3:  CheckHit3(ldrvalue3, 3250); break;
       case 4:  CheckHit3(ldrvalue3, 3000); break;
       case 5:  CheckHit3(ldrvalue3, 3850); break;
       case 6:  CheckHit3(ldrvalue3, 3000); break;
@@ -144,12 +169,15 @@ void loop() {
       case 10: CheckHit3(ldrvalue3, 1600); break;
       case 11: CheckHit3(ldrvalue3, 1600); break;
       case 12: CheckHit3(ldrvalue3, 1600); break;
+      case 13: CheckHit3(ldrvalue3, 2500); break;
+      case 14: CheckHit3(ldrvalue3, 2500); break;
+      case 15: CheckHit3(ldrvalue3, 2000); break;
     }
 
     switch(opencount5) {
       case 1:  CheckHit5(ldrvalue5, 2500); break;
-      case 2:  CheckHit5(ldrvalue5, 32500 - 29350 - 500); break;
-      case 3:  CheckHit5(ldrvalue5, 40000 - 35750); break;
+      case 2:  CheckHit5(ldrvalue5, 2650); break;
+      case 3:  CheckHit5(ldrvalue5, 4250); break;
       case 4:  CheckHit5(ldrvalue5, 3000); break;
       case 5:  CheckHit5(ldrvalue5, 3000); break;
       case 6:  CheckHit5(ldrvalue5, 3000); break;
@@ -158,6 +186,9 @@ void loop() {
       case 9:  CheckHit5(ldrvalue5, 3000); break;
       case 10: CheckHit5(ldrvalue5, 1600); break;
       case 11: CheckHit5(ldrvalue5, 1600); break;
+      case 12: CheckHit5(ldrvalue5, 2500); break;
+      case 13: CheckHit5(ldrvalue5, 1500); break;
+      case 14: CheckHit5(ldrvalue5, 2500); break;
     }
 
     switch(opencount6) {
@@ -168,12 +199,15 @@ void loop() {
       case 5: CheckHit6(ldrvalue6, 3000); break;
       case 6: CheckHit6(ldrvalue6, 1500); break;
       case 7: CheckHit6(ldrvalue6, 1700); break;
+      case 8: CheckHit6(ldrvalue6, 1500); break;
+      case 9: CheckHit6(ldrvalue6, 2000); break;
+      case 10: CheckHit6(ldrvalue6,1500); break;
     }
 
     switch(opencount9) {
       case 1:  CheckHit9(ldrvalue9, 2500); break;
-      case 2:  CheckHit9(ldrvalue9, 29350 - 26240); break;
-      case 3:  CheckHit9(ldrvalue9, 40000 - 35750); break;
+      case 2:  CheckHit9(ldrvalue9, 3110); break;
+      case 3:  CheckHit9(ldrvalue9, 4250); break;
       case 4:  CheckHit9(ldrvalue9, 3000); break;
       case 5:  CheckHit9(ldrvalue9, 4650); break;
       case 6:  CheckHit9(ldrvalue9, 3000); break;
@@ -184,12 +218,15 @@ void loop() {
       case 11: CheckHit9(ldrvalue9, 1600); break;
       case 12: CheckHit9(ldrvalue9, 1600); break;
       case 13: CheckHit9(ldrvalue9, 1600); break;
+      case 14: CheckHit9(ldrvalue9, 2000); break;
+      case 15: CheckHit9(ldrvalue9, 2000); break;
+      case 16: CheckHit9(ldrvalue9, 2500); break;
     }
 
     switch(opencount10) {
       case 1:  CheckHit10(ldrvalue10, 2500); break;
-      case 2:  CheckHit10(ldrvalue10, 29350 - 26240); break;
-      case 3:  CheckHit10(ldrvalue10, 35750 - 32500); break;
+      case 2:  CheckHit10(ldrvalue10, 3110); break;
+      case 3:  CheckHit10(ldrvalue10, 3250); break;
       case 4:  CheckHit10(ldrvalue10, 2500); break;
       case 5:  CheckHit10(ldrvalue10, 2200); break;
       case 6:  CheckHit10(ldrvalue10, 3000); break;
@@ -198,8 +235,10 @@ void loop() {
       case 9:  CheckHit10(ldrvalue10, 1600); break;
       case 10: CheckHit10(ldrvalue10, 1600); break;
       case 11: CheckHit10(ldrvalue10, 1600); break;
+      case 12: CheckHit10(ldrvalue10, 2000); break;
+      case 13: CheckHit10(ldrvalue10, 2500); break;
+      case 14: CheckHit10(ldrvalue10, 2000); break;
     }
-
 
   
     
@@ -213,7 +252,7 @@ void loop() {
 }
 
 // Kapalı hedefleri açmak için Trigger metodunu kullanıyoruz. Her motorun Trigger metodu kendine özel.
-// Bu metot 2 değişken alıyor. İlk değişken hedefin kaçıncı saniyede açılacağı, ikinci değer ise hangi duruma geleceği (hangi açıya geleceği).
+// Bu metot 1 değişken alıyor. O da hedefin hangi duruma geleceği (hangi açıya geleceği).
 void Trigger3(int wishedstate){
 // Servo kapalıysa buraya gir
   if(servostate3 == 0){
@@ -327,7 +366,7 @@ void CheckHit3(int ldr, float duration){
       servostate3 = 0; // Son durumunu kaydet.
       skor += 250 * multiplier; 
       Serial.print(millis() / 1000.0);
-      Serial.println("-> Hedef 3 vuruldu! " + String(250 * multiplier) + " +puan (Skor : " + String(skor) +")");
+      Serial.println("-> Hedef 3 vuruldu! + " + String(250 * multiplier) + " puan (Skor : " + String(skor) +")");
       multiplier *= 2;
   }
   // Hedef vurulamadan kapanırsa
@@ -348,7 +387,7 @@ void CheckHit5(int ldr, float duration){
       servostate5 = 1; // Servo5 , 6 ve 9 ; 90 derecedeyken kapalı
       skor += 250 * multiplier;
       Serial.print(millis() / 1000.0);
-      Serial.println("-> Hedef 5 vuruldu! " + String(250 * multiplier) + " +puan (Skor : " + String(skor) +")");
+      Serial.println("-> Hedef 5 vuruldu! + " + String(250 * multiplier) + " puan (Skor : " + String(skor) +")");
       multiplier *= 2;
   }
   else if (millis() >= lastopentime5 + duration) {
@@ -370,7 +409,7 @@ void CheckHit6(int ldr, float duration){
       skor -= 2000; // Servo6 sivil.
       multiplier = 1;
       Serial.print(millis() / 1000.0);
-      Serial.println("-> Sivil vuruldu! -2000 puan");
+      Serial.println("-> Sivil vuruldu! -2000 puan. (Skor : " + String(skor) +")");
   }
   else if (millis() >= lastopentime6 + duration) {
       servo6.write(90);
@@ -388,7 +427,7 @@ void CheckHit9(int ldr, float duration){
       servostate9 = 1; 
       skor += 250 * multiplier;
       Serial.print(millis() / 1000.0);
-      Serial.println("-> Hedef 9 vuruldu! " + String(250 * multiplier) + " +puan (Skor : " + String(skor) +")");
+      Serial.println("-> Hedef 9 vuruldu! + " + String(250 * multiplier) + " puan (Skor : " + String(skor) +")");
       multiplier *= 2;
   }
   else if (millis() >= lastopentime9 + duration) {
@@ -408,7 +447,7 @@ void CheckHit10(int ldr, float duration){
       servostate10 = 2;
       skor += 250 * multiplier;
       Serial.print(millis() / 1000.0);
-      Serial.println("-> Hedef 10 vuruldu! " + String(250 * multiplier) + " +puan (Skor : " + String(skor) +")");
+      Serial.println("-> Hedef 10 vuruldu! + " + String(250 * multiplier) + " puan (Skor : " + String(skor) +")");
       multiplier *= 2;
   }
   else if (millis() >= lastopentime10 + duration) {
