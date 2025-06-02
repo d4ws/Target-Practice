@@ -4,14 +4,14 @@
 
 SoftwareSerial mySerial(11,2); // RX -> 2 , TX -> 11
 DFRobotDFPlayerMini myDFPlayer;
-
+// Motorları tanımlıyoruz.
 Servo servo3;
 Servo servo5;
 Servo servo6;
 Servo servo9;
 Servo servo10;
 
-const int ldrThreshold = 600; // Lazer vurulma eşiği.
+const int ldrThreshold = 900; // Lazer vurulma eşiği.
 const unsigned long maxGameTime = 135000; // Oyun süresi (milisaniye)
 
 // Motorların en son kaçıncı saniyede açıldıklarını kayıt eden değişkenler.
@@ -23,7 +23,7 @@ unsigned long lastopentime9;
 unsigned long lastopentime10;
 
 // Skor ve skor katlayıcısı.
-unsigned long skor = 0;
+long skor = 0;
 int multiplier = 1;
 int maxmultiplier = 16;
 bool gameOver = false;
@@ -151,6 +151,8 @@ void loop() {
 
     // Skor katlayıcının belli bir sayının üstüne çıkmasını istemiyoruz.
     if (multiplier  >= maxmultiplier) { multiplier = maxmultiplier;}
+    // Skor eksiye düşerse sıfıra çekiyoruz.
+    if (skor < 0) {skor = 0;}
 
     // Burası hedeflerin kapanmasını sağlamak için.
     switch(opencount3) {
@@ -236,8 +238,6 @@ void loop() {
       case 13: CheckHit10(ldrvalue10, 2500); break;
       case 14: CheckHit10(ldrvalue10, 2000); break;
     }
-
-  
     
     // Oyun süresi dolarsa oyunu bitir.
     if (millis() >= maxGameTime) {
@@ -356,7 +356,6 @@ void Trigger10(int wishedstate){
 void CheckHit3(int ldr, float duration){
   // Hedef zaten kapalıysa bir şey yapma.
   if(servostate3 == 0) return;
-
   // Hedef vurulursa
   if (ldr >= ldrThreshold) {
       servo3.write(0); // Hedefi kapat.
